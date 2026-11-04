@@ -10,7 +10,6 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
-using Newtonsoft.Json.Linq;
 
 namespace OfflineBodies
 {
@@ -96,15 +95,6 @@ namespace OfflineBodies
             Inventory = inv;
         }
 
-        public void CopyAppearanceFrom(EntityPlayer player)
-        {
-            // Skin, hair, eyes etc. are kept in skinConfig; copy it so the body looks like its owner.
-            if (player.WatchedAttributes["skinConfig"] is ITreeAttribute skin)
-            {
-                WatchedAttributes["skinConfig"] = skin.Clone();
-            }
-        }
-
         /// <summary>
         /// Shows the owner's clothes and armor on the body. These are display copies only:
         /// the real clothes stay on the player and this inventory can't be opened or dropped.
@@ -123,23 +113,8 @@ namespace OfflineBodies
             gear.storeInv();
         }
 
-        private static readonly AssetLocation PlayerCode = new("game", "player");
-
-        /// <summary>The body uses the player's skin options; copy them from the player entity type once.</summary>
-        private static void EnsureSkinnableParts(EntityProperties properties, ICoreAPI api)
-        {
-            if (properties.Attributes?["skinnableParts"].Exists == true) return;
-            var playerType = api.World.GetEntityType(PlayerCode);
-            var parts = playerType?.Attributes?["skinnableParts"];
-            if (parts == null || !parts.Exists) return;
-            var jo = properties.Attributes?.Token as JObject ?? new JObject();
-            jo["skinnableParts"] = parts.Token.DeepClone();
-            properties.Attributes = new JsonObject(jo);
-        }
-
         public override void Initialize(EntityProperties properties, ICoreAPI api, long InChunkIndex3d)
         {
-            EnsureSkinnableParts(properties, api);
             base.Initialize(properties, api, InChunkIndex3d);
             LoadInventory();
 

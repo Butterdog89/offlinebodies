@@ -13,7 +13,6 @@
     "texture": { "base": "game:entity/humanoid/seraph-naked-hairless" },
     "behaviors": [
       { "code": "interpolateposition" },
-      { "code": "extraskinnable" },
       { "code": "seraphinventory" }
     ],
     "animations": [
@@ -23,7 +22,6 @@
   "server": {
     "behaviors": [
       { "code": "passivephysics" },
-      { "code": "extraskinnable" },
       { "code": "seraphinventory" }
     ]
   },

@@ -218,7 +218,6 @@ namespace OfflineBodies
                 body.OwnerUID = player.PlayerUID;
                 body.OwnerName = player.PlayerName;
                 body.LoggedOutAtReal = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-                body.CopyAppearanceFrom(pe);
 
                 var (inv, origins) = TakeItemsFromPlayer(player, body.BodyId);
                 body.SetContents(inv, origins);
