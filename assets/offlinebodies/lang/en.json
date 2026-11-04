@@ -1,0 +1,14 @@
+{
+  "body-name": "{0} (asleep)",
+  "body-info": "Logged out {0}. Wakes up when they log back in.",
+  "body-dragged-by": "Being dragged by {0}",
+  "help-loot": "Search their pockets",
+  "help-drag": "Drag / let go",
+  "drag-busy": "Someone else is already dragging this body.",
+  "drag-start": "You start dragging {0}. Your hands are full. Sneak + right-click to let go.",
+  "hands-full": "Your hands are full. Sneak + right-click to let go of the body.",
+  "drag-stop": "You let go of {0}.",
+  "woke-up": "You wake up. Anything people took while you slept is gone.",
+  "woke-up-restored": "You wake up. Your body was lost, so your items were restored from the backup.",
+  "dialog-title": "{0}'s pockets"
+}

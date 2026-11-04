@@ -1,0 +1,31 @@
+{
+  "code": "sleepingbody",
+  "class": "EntitySleepingBody",
+  "hitboxSize": { "x": 1.0, "y": 0.5 },
+  "eyeHeight": 0.3,
+  "canClimb": false,
+  "falldamage": false,
+  "attributes": {},
+  "client": {
+    "renderer": "Shape",
+    "pitchStep": false,
+    "shape": { "base": "game:entity/humanoid/seraph-faceless" },
+    "texture": { "base": "game:entity/humanoid/seraph-naked-hairless" },
+    "behaviors": [
+      { "code": "interpolateposition" },
+      { "code": "extraskinnable" },
+      { "code": "seraphinventory" }
+    ],
+    "animations": [
+      { "code": "sleep", "animation": "lie", "triggeredBy": { "defaultAnim": true } }
+    ]
+  },
+  "server": {
+    "behaviors": [
+      { "code": "passivephysics" },
+      { "code": "extraskinnable" },
+      { "code": "seraphinventory" }
+    ]
+  },
+  "sounds": {}
+}
