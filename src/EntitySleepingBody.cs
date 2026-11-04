@@ -23,7 +23,8 @@ namespace OfflineBodies
     {
         private const int PacketClose = 1001;
         private const float DragReleaseDistance = 6f;
-        private const double DragFollowDistance = 2.0;
+        /// <summary>How far in front of the dragger the body floats, so you can see where you drop it.</summary>
+        private const double DragFollowDistance = 1.5;
         private const string DragStatCode = "offlinebodies-drag";
         /// <summary>Added to the dragger's walk speed stat; -0.35 means 35% slower.</summary>
         private const float DragWalkSpeedPenalty = -0.35f;
@@ -319,15 +320,15 @@ namespace OfflineBodies
                 return;
             }
 
-            // Follow two blocks behind the dragger, at their height. If that spot is blocked,
-            // try one block behind, and if that is blocked too, pull the body onto their feet.
+            // Float in front of the dragger, at their height, so they can see where they place it.
+            // If that spot is blocked, try closer, and if that is blocked too, pull it onto their feet.
             double yaw = pe.Pos.Yaw;
             double ty = pe.Pos.Y;
             double tx = pe.Pos.X, tz = pe.Pos.Z;
             foreach (double dist in new[] { DragFollowDistance, 1.0 })
             {
-                double cx = pe.Pos.X - Math.Sin(yaw) * dist;
-                double cz = pe.Pos.Z - Math.Cos(yaw) * dist;
+                double cx = pe.Pos.X + Math.Sin(yaw) * dist;
+                double cz = pe.Pos.Z + Math.Cos(yaw) * dist;
                 var block = Api.World.BlockAccessor.GetBlock(new BlockPos((int)Math.Floor(cx), (int)Math.Floor(ty + 0.1), (int)Math.Floor(cz), pe.Pos.Dimension));
                 if (block.CollisionBoxes == null || block.CollisionBoxes.Length == 0)
                 {

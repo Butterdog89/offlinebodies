@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+- A dragged body now floats in front of you instead of trailing behind, so you can see where it will drop.
+- The body is scaled down so a lying body takes up about one block instead of two.
+- While you are carrying a body, right-click no longer works on beds, chests or other interactable blocks (so a bed can't put you to sleep). Doors are the one exception and still open. This is enforced server-side.
+
 ## 0.1.2
 
 - Fix a client crash when logging in while your body had been moved (for example while someone was dragging it, or after it had been dragged and dropped). The mod no longer teleports a player to their body until their game has finished loading.

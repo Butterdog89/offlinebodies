@@ -53,14 +53,22 @@ namespace OfflineBodies
                 if (action != EnumEntityAction.InWorldLeftMouseDown && action != EnumEntityAction.InWorldRightMouseDown) return;
                 if (!EntitySleepingBody.IsDragging(capi.World, self, player!.PlayerUID)) return;
 
-                handled = EnumHandling.PreventDefault;
                 bool sneaking = self.Controls.ShiftKey || self.Controls.Sneak;
-                if (action == EnumEntityAction.InWorldRightMouseDown && sneaking)
+                if (action == EnumEntityAction.InWorldRightMouseDown)
                 {
-                    // Let go, wherever you are looking. No need to aim at the body.
-                    channel.SendPacket(new ReleaseDragPacket());
-                    return;
+                    if (sneaking)
+                    {
+                        // Let go, wherever you are looking. No need to aim at the body.
+                        handled = EnumHandling.PreventDefault;
+                        channel.SendPacket(new ReleaseDragPacket());
+                        return;
+                    }
+                    // Doors are the one thing you can still use while your hands are full.
+                    var sel = player.CurrentBlockSelection;
+                    if (sel != null && IsDoor(capi.World.BlockAccessor.GetBlock(sel.Position))) return;
                 }
+
+                handled = EnumHandling.PreventDefault;
                 capi.TriggerIngameError(this, "handsfull", Lang.Get("offlinebodies:hands-full"));
             };
         }
@@ -70,7 +78,7 @@ namespace OfflineBodies
             player.InWorldAction += (EnumEntityAction action, bool on, ref EnumHandling handled) =>
             {
                 if (player.Entity == null) return;
-                if (BlocksAction(player.Entity.World, player.PlayerUID, player.Entity, player.CurrentEntitySelection?.Entity, action, on))
+                if (BlocksAction(player.Entity.World, player.PlayerUID, player.Entity, player.CurrentBlockSelection, action, on))
                 {
                     handled = EnumHandling.PreventDefault;
                 }
@@ -79,17 +87,49 @@ namespace OfflineBodies
 
         /// <summary>
         /// While dragging, left and right clicks in the world do nothing (no mining, attacking, placing or using items).
-        /// The one exception: sneak + right-click on a sleeping body, so the dragger can let go.
+        /// Exceptions: sneak + right-click lets go of the body, and right-clicking a door still opens it.
         /// </summary>
-        private static bool BlocksAction(IWorldAccessor world, string uid, EntityAgent self, Entity? looking, EnumEntityAction action, bool on)
+        private static bool BlocksAction(IWorldAccessor world, string uid, EntityAgent self, BlockSelection? blockSel, EnumEntityAction action, bool on)
         {
             if (!on) return false;
             if (action != EnumEntityAction.InWorldLeftMouseDown && action != EnumEntityAction.InWorldRightMouseDown) return false;
             if (!EntitySleepingBody.IsDragging(world, self, uid)) return false;
             bool sneaking = self.Controls.ShiftKey || self.Controls.Sneak;
-            // Sneak + right-click is how you let go; the client turns it into a release packet.
-            if (action == EnumEntityAction.InWorldRightMouseDown && sneaking) return false;
+            if (action == EnumEntityAction.InWorldRightMouseDown)
+            {
+                // Sneak + right-click is how you let go; the client turns it into a release packet.
+                if (sneaking) return false;
+                // Doors stay usable while carrying a body.
+                if (blockSel != null && IsDoor(world.BlockAccessor.GetBlock(blockSel.Position))) return false;
+            }
             return true;
+        }
+
+        /// <summary>
+        /// Authoritative block gate: while a player is carrying a body, the server refuses to let them
+        /// use (right-click) or break/build any block, so beds, chests and the like do nothing.
+        /// Doors are the single exception. This runs even when the client-side block is bypassed.
+        /// </summary>
+        private EnumWorldAccessResponse OnTestBlockAccess(IPlayer player, BlockSelection blockSel, EnumBlockAccessFlags accessType, ref string claimant, EnumWorldAccessResponse response)
+        {
+            if (response == EnumWorldAccessResponse.Denied) return response;
+            var self = player?.Entity;
+            if (self == null || blockSel == null) return response;
+            if (!EntitySleepingBody.IsDragging(self.World, self, player!.PlayerUID)) return response;
+
+            // Opening/using a door is allowed; everything else is refused while the hands are full.
+            if (accessType.HasFlag(EnumBlockAccessFlags.Use) && IsDoor(self.World.BlockAccessor.GetBlock(blockSel.Position)))
+            {
+                return response;
+            }
+            return EnumWorldAccessResponse.Denied;
+        }
+
+        /// <summary>True for door and trapdoor blocks (matched by block code), which stay usable while carrying.</summary>
+        private static bool IsDoor(Block? block)
+        {
+            var path = block?.Code?.Path;
+            return path != null && path.Contains("door");
         }
 
         public override void StartServerSide(ICoreServerAPI api)
@@ -109,6 +149,7 @@ namespace OfflineBodies
             api.Event.PlayerJoin += OnPlayerJoinWakeUp;
             api.Event.PlayerNowPlaying += OnPlayerNowPlaying;
             api.Event.PlayerJoin += OnPlayerJoinHandsFull;
+            api.Event.OnTestBlockAccess += OnTestBlockAccess;
             api.Event.OnEntityLoaded += OnEntityAppeared;
             api.Event.OnEntitySpawn += OnEntityAppeared;
 
