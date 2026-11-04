@@ -8,7 +8,6 @@
   "attributes": {},
   "client": {
     "renderer": "Shape",
-    "size": 0.5,
     "pitchStep": false,
     "shape": { "base": "game:entity/humanoid/seraph-faceless" },
     "texture": { "base": "game:entity/humanoid/seraph-naked-hairless" },

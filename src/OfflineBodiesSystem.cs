@@ -112,7 +112,7 @@ namespace OfflineBodies
         /// </summary>
         private EnumWorldAccessResponse OnTestBlockAccess(IPlayer player, BlockSelection blockSel, EnumBlockAccessFlags accessType, ref string claimant, EnumWorldAccessResponse response)
         {
-            if (response == EnumWorldAccessResponse.Denied) return response;
+            if (response != EnumWorldAccessResponse.Granted) return response;
             var self = player?.Entity;
             if (self == null || blockSel == null) return response;
             if (!EntitySleepingBody.IsDragging(self.World, self, player!.PlayerUID)) return response;
@@ -122,7 +122,7 @@ namespace OfflineBodies
             {
                 return response;
             }
-            return EnumWorldAccessResponse.Denied;
+            return EnumWorldAccessResponse.DeniedByMod;
         }
 
         /// <summary>True for door and trapdoor blocks (matched by block code), which stay usable while carrying.</summary>

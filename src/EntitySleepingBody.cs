@@ -23,8 +23,8 @@ namespace OfflineBodies
     {
         private const int PacketClose = 1001;
         private const float DragReleaseDistance = 6f;
-        /// <summary>How far in front of the dragger the body floats, so you can see where you drop it.</summary>
-        private const double DragFollowDistance = 1.5;
+        /// <summary>How far in front of the dragger the body floats (one block), so you can see where you drop it.</summary>
+        private const double DragFollowDistance = 1.0;
         private const string DragStatCode = "offlinebodies-drag";
         /// <summary>Added to the dragger's walk speed stat; -0.35 means 35% slower.</summary>
         private const float DragWalkSpeedPenalty = -0.35f;
@@ -325,7 +325,7 @@ namespace OfflineBodies
             double yaw = pe.Pos.Yaw;
             double ty = pe.Pos.Y;
             double tx = pe.Pos.X, tz = pe.Pos.Z;
-            foreach (double dist in new[] { DragFollowDistance, 1.0 })
+            foreach (double dist in new[] { DragFollowDistance, 0.5 })
             {
                 double cx = pe.Pos.X + Math.Sin(yaw) * dist;
                 double cz = pe.Pos.Z + Math.Cos(yaw) * dist;
