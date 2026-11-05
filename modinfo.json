@@ -3,8 +3,9 @@
   "side": "universal",
   "name": "Offline Bodies",
   "modid": "offlinebodies",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "authors": [ "playboystory" ],
   "description": "When a player logs out, their body stays in the world asleep. Anyone can loot it like a chest or drag it somewhere else. It can't be hurt, and the player wakes up in it when they log back in. Built on code from Death Corpses (MIT).",
   "dependencies": { "game": "1.22.0" }
 }
+

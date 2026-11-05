@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5 (release candidate)
+
+- Combine one-block forward dragging and door-only interactions with the 0.1.3.5 rendering workaround.
+- Remove dynamic player-skin compositing from sleeping bodies; default skin replaces copied skin/hair.
+- First-join crash resolution still requires in-game confirmation.
+
 ## 0.1.4
 
 - A dragged body now floats one block in front of you instead of trailing two blocks behind, so you can see where it will drop.
@@ -17,3 +23,4 @@
 ## 0.1.0
 
 - First release. Players who log out in survival leave a sleeping body that others can loot like a chest. The owner wakes up in it on login. Bodies can't be damaged and never despawn.
+
