@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- Added `/offlinebodies prepare-uninstall` so players can reclaim their items before the mod is removed. It pauses new sleeping bodies and lists the players who still need to log in. The pause is stored with the world save.
+
 ## 0.1.5 (release candidate)
 
 - Combine one-block forward dragging and door-only interactions with the 0.1.3.5 rendering workaround.

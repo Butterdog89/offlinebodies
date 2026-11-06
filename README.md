@@ -17,6 +17,14 @@ Admins can run `/offlinebodies` to list all current sleeping bodies.
 
 Every body has a record stored inside the world save, written together with the chunks and player data on each save. If the body can't be found when the owner logs in, their items come back from that record. A body that loads without a matching record (for example an old copy after a crash) is removed without dropping items, to reduce the risk of item loss or duplication. Crash recovery still needs in-game verification.
 
+## Removing the mod
+
+1. Keep Offline Bodies 0.1.6 or later installed and run `/offlinebodies prepare-uninstall` as an admin. This pauses new sleeping bodies, including after a saved restart.
+2. Have each listed player log in and finish waking up to reclaim the items still on their body. Run the command again to check who is left.
+3. Once the command reports that no sleeping bodies remain, save and stop the server cleanly. Then remove the mod.
+
+While a body remains, its items are held by the mod and will be inaccessible when the mod is absent.
+
 ## Building
 
 Requires the .NET 10 SDK and a Vintage Story install for the game DLLs.
@@ -25,7 +33,7 @@ Requires the .NET 10 SDK and a Vintage Story install for the game DLLs.
 dotnet build OfflineBodies.csproj -c Release -p:VintageStoryInstallDir="<path to your Vintage Story install>"
 ```
 
-To package a release, zip these at the **root** of the zip (no enclosing folder): `offlinebodies.dll` (from `bin/Release/`), `modinfo.json`, the `assets/` folder, and `LICENSE-DeathCorpses.txt`.
+To package a release, zip these at the **root** of the zip (no enclosing folder): `offlinebodies.dll` (from `bin/Release/`), `modinfo.json`, the `assets/` folder, `README.md`, and `LICENSE-DeathCorpses.txt`.
 
 ## License
 

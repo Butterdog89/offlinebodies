@@ -30,6 +30,8 @@ namespace OfflineBodies
 
         private ICoreServerAPI? _sapi;
         private readonly Dictionary<string, BodyRecord> _records = new();
+        private bool _preparingUninstall;
+        private bool _recordLoadFailed;
         
         public static OfflineBodiesSystem? Instance { get; private set; }
 
@@ -162,7 +164,26 @@ namespace OfflineBodies
                     var lines = _records.Values.Select(r =>
                         $"{r.OwnerName}: {r.Inventory.Count(s => !s.Empty)} stacks at {(int)r.X} {(int)r.Y} {(int)r.Z}");
                     return TextCommandResult.Success(string.Join("\n", lines));
-                });
+                })
+                .BeginSubCommand("prepare-uninstall")
+                    .WithDescription("Pause new sleeping bodies while players reclaim their items")
+                    .RequiresPrivilege(Privilege.controlserver)
+                    .HandleWith(PrepareUninstall)
+                .EndSubCommand();
+        }
+
+        private TextCommandResult PrepareUninstall(TextCommandCallingArgs _)
+        {
+            if (_recordLoadFailed)
+                return TextCommandResult.Error("Sleeping body records could not be loaded. Check the server log before removing Offline Bodies.");
+
+            _preparingUninstall = true;
+            if (_records.Count == 0)
+                return TextCommandResult.Success("No sleeping bodies remain. Save and stop the server before removing Offline Bodies.");
+
+            var owners = _records.Values.Select(record => record.OwnerName);
+            return TextCommandResult.Success(
+                $"New sleeping bodies are paused. These players must log in to reclaim their items: {string.Join(", ", owners)}");
         }
 
         public override void Dispose()
@@ -175,28 +196,33 @@ namespace OfflineBodies
         // player data and the chunks. After a crash all three roll back to the same autosave.
 
         private const string SaveKey = "offlinebodies-records";
+        private const string PrepareUninstallKey = "prepareUninstall";
 
         private void OnSaveGameLoaded()
         {
             var sapi = _sapi!;
-            byte[]? data = sapi.WorldManager.SaveGame.GetData(SaveKey);
-            if (data != null)
+            try
             {
-                try
+                byte[]? data = sapi.WorldManager.SaveGame.GetData(SaveKey);
+                if (data != null)
                 {
                     var root = new TreeAttribute();
                     root.FromBytes(data);
+                    _preparingUninstall = root.GetBool(PrepareUninstallKey);
                     foreach (var entry in root)
                     {
-                        if (entry.Value is not TreeAttribute t) continue;
+                        if (entry.Key == PrepareUninstallKey) continue;
+                        if (entry.Value is not TreeAttribute t)
+                            throw new InvalidOperationException($"Invalid sleeping body record: {entry.Key}");
                         var rec = BodyRecord.FromTree(t, sapi);
                         _records[rec.OwnerUID] = rec;
                     }
                 }
-                catch (Exception e)
-                {
-                    Mod.Logger.Error($"Could not read sleeping body records: {e}");
-                }
+            }
+            catch (Exception e)
+            {
+                _recordLoadFailed = true;
+                Mod.Logger.Error($"Could not read sleeping body records: {e}");
             }
             sapi.Event.GameWorldSave += OnGameWorldSave;
             Mod.Logger.Notification($"Loaded {_records.Count} sleeping body record(s)");
@@ -204,7 +230,11 @@ namespace OfflineBodies
 
         private void OnGameWorldSave()
         {
+            // Keep the original data available for recovery if any record could not be read.
+            if (_recordLoadFailed) return;
+
             var root = new TreeAttribute();
+            root.SetBool(PrepareUninstallKey, _preparingUninstall);
             int i = 0;
             foreach (var rec in _records.Values)
             {
@@ -234,6 +264,8 @@ namespace OfflineBodies
 
         private void OnPlayerDisconnect(IServerPlayer player)
         {
+            if (_preparingUninstall || _recordLoadFailed) return;
+
             var sapi = _sapi!;
             var pe = player.Entity;
             if (pe == null || !pe.Alive) return;
@@ -353,6 +385,7 @@ namespace OfflineBodies
         /// <param name="clientReady">True once the player's game has finished loading (PlayerNowPlaying).</param>
         private void TryWakeUp(IServerPlayer player, bool clientReady)
         {
+            if (_recordLoadFailed) return;
             if (!_records.TryGetValue(player.PlayerUID, out var rec)) return;
 
             var body = FindBody(rec);
@@ -500,7 +533,7 @@ namespace OfflineBodies
 
         private void OnEntityAppeared(Entity entity)
         {
-            if (entity is not EntitySleepingBody body || _sapi == null) return;
+            if (entity is not EntitySleepingBody body || _sapi == null || _recordLoadFailed) return;
             if (_records.TryGetValue(body.OwnerUID ?? "", out var rec) && rec.BodyId == body.BodyId) return;
 
             // A stale copy (the owner already woke up, or a newer body exists). Remove it without dropping items.
@@ -510,7 +543,7 @@ namespace OfflineBodies
 
         public bool IsValidBody(EntitySleepingBody body)
         {
-            return _records.TryGetValue(body.OwnerUID ?? "", out var rec) && rec.BodyId == body.BodyId;
+            return !_recordLoadFailed && _records.TryGetValue(body.OwnerUID ?? "", out var rec) && rec.BodyId == body.BodyId;
         }
     }
 

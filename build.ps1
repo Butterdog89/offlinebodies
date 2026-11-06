@@ -34,7 +34,7 @@ if ($LASTEXITCODE -ne 0) { throw "Build failed (see errors above)." }
 $dll = "$root\bin\Release\offlinebodies.dll"
 if (-not (Test-Path $dll)) { throw "Build reported success but $dll is missing." }
 
-# --- package the release zip (dll + modinfo.json + assets\ + license at the root) ---
+# --- package the release zip ---
 $version = (Get-Content "$root\modinfo.json" -Raw | ConvertFrom-Json).version
 $stage = "$root\_pkg"
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
@@ -42,6 +42,7 @@ New-Item -ItemType Directory -Path $stage | Out-Null
 
 Copy-Item $dll $stage
 Copy-Item "$root\modinfo.json" $stage
+Copy-Item "$root\README.md" $stage
 Copy-Item "$root\assets" $stage -Recurse
 if (Test-Path "$root\LICENSE-DeathCorpses.txt") { Copy-Item "$root\LICENSE-DeathCorpses.txt" $stage }
 
